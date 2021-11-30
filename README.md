@@ -1,1 +1,46 @@
-#PHP Version 8.1.0 NGINX Version 1.21.4 MSSQL Version 2019
+## Запуск:
+-  docker-compose up -d
+
+## Стек:
+-  PHP Version 8.1.0
+-  NGINX Version 1.21.4
+-  MSSQL Version 2019
+
+``` yml
+version: "3.8"
+services:
+  sqlserver:
+    container_name: sqlserver
+    image: mcr.microsoft.com/mssql/server:2019-CU2-ubuntu-16.04
+    ports:
+      - 1433:1433
+    env_file:
+      - ./config/.env
+    volumes:
+      - ./db/:/var/opt/mssql/data
+   
+  app:
+    build: ./config/php
+    container_name: php-app
+    working_dir: /var/www/html
+    volumes:
+      - ./www/:/var/www/html
+    depends_on:
+      - sqlserver
+
+  nginx:
+    image: nginx:alpine
+    container_name: php-nginx
+    ports:
+      - 8080:80
+    volumes:
+      - ./www/:/var/www/html
+      - ./config/nginx/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+
+networks:
+  default:
+    name: "backend"
+    external: true
+```
